@@ -1,0 +1,97 @@
+\section{The Termination Repair Problem}
+\label{sec:problem}
+
+In this section, we define and motivate the problem of termination repair, demonstrate its noncomputability, and illustrate the notion of a termination argument.
+
+A termination error is an unintended instance of program's infinite execution. The goal of termination repair is to modify a program with a termination error to ensure that it terminates. The \emph{search space} defines the set of all source code modifications that are considered as candidates repairs. The \emph{termination argument} is required to prove that the fixed program indeed terminates. Finding a termination argument is non-trivial, because, among other reasons, violations of the termination property are infinite traces, and determining if a program terminates is a undecidable problem. Since there might be multiple ways to fix a program, and not all of them are necessarily correct, the \emph{cost function} is used to rank patches based on their likelihood to be correct. We refer to the pair of programs $(p, p')$ as a patch. We say that the patch is \emph{plausible} if $p'$ terminates. We say that the patch is \emph{correct} if $p'$ implements the intended semantics of $p$. We assume that the set $\mathcal{P}$ of all valid programs is the \textsc{While} language consisting of assignments, if conditions, while loops, return statements, and the skip statement. Programs in \textsc{While} do not terminate due to infinite loops, the class of defects which this work aims to automatically address.
+
+\begin{definition}
+ Given a non-terminating program $p\in \mathcal{P}$, a search space definition function $S: \mathcal{P} \rightarrow 2^\mathcal{P}$ and a cost function $c: \mathcal{P} \rightarrow [0,1]$, the goal of \emph{termination repair problem} $\textsc{Fix}_c^S(p)$ is to find a pair of a program $p'\in S(p)$ and a termination argument $A$ such that $A$ proves that $p'$ terminates, and $c(p')$ is the minimum among such programs.
+\end{definition}
+
+\subsection{Computability of Termination Repair}
+
+The computability of $\textsc{Fix}_c^{S}$ depends on the search space and the cost function. Consider, for example, the search space $S_1$ that inserts return statements in arbitrary parts of the program, and $S_2$ that makes arbitrary modifications of boolean expressions. Assume that $c$ is a constant function.
+
+\begin{proposition}
+  $\textsc{Fix}_c^{S_1}$ and $\textsc{Fix}_c^{S_1}$ are computable.
+\end{proposition}
+\begin{proof}
+  $\textsc{Fix}_c^{S_1}$ is computable because inserting a return statement in the beginning of the program ensures its termination. $\textsc{Fix}_c^{S_2}$ is computable because replacing all loop conditions with $\mathit{False}$ ensures its termination.
+\end{proof}
+
+We refer to the patches used in the proof as \emph{trivial patches}, because they merely disable program execution. Intuitively, such patches are likely to be incorrect. Since many defects are caused by typos and incorrect conditions, program repair algorithms often assume that the program is almost correct, and only attempt to modify a small part of the source code~\cite{mechtaev2015directfix,d2016qlose}. For a more practical formulation, consider the problem $\textsc{Fix}_{c_n}^{S_2}$, where $c_n$ assigns all modifications of up to $n$ expressions the cost 0, and all other modifications the cost 1. Thus, computing $\textsc{Fix}_{c_n}^{S_2}$ entails identifying if the termination can be ensured by modifying at most $n$ expressions.
+
+\begin{proposition}
+  $\textsc{Fix}_{c_n}^{S_1}$ is noncomputable.
+\end{proposition}
+\begin{proof}
+Let $p$ be a program. Consider the program $$p' \triangleq \mathtt{while}\ (\mathit{True})\ \mathtt{skip}; \ldots n\ \text{times} \ldots \mathtt{while}\ (\mathit{True})\ \mathtt{skip};\ p$$ The only possible repair of the size at most $n$ is to disable all $n$ infinite loops by, for example, modifying all $\mathtt{while}\ (\mathit{True})\ \mathtt{skip}$ to $\mathtt{while}\ (\mathit{False})\ \mathtt{skip}$. Since the number of modifications is bounded by $n$, $p$ inside $p'$ cannot be changed, and therefore a patch for $p'$ exists if and only if $p$ terminates. Thus, if $\textsc{Fix}_{c_n}^{S_1}$ is computable, then the Halting problem is decidable.
+\end{proof}
+
+In conclusion, a practical approach to solve the termination repair problem needs to avoids the generation of trivial repairs that disable program execution. Avoiding trivial repairs may make the problem noncomputable.
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \begin{lstlisting}[language=diff]
+  int l = *;
+  int h = *;
+- while (h > 0 && l >= 0) {
++ while (h > 0 && l > 0) {
+    if (l > h)
+      l = h;
+    h -= l;
+  }
+\end{lstlisting}
+ 	  \caption{The developer patch (simplified).}
+	  \label{fig:buggy_program}
+  \end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+  \begin{align*}
+    r_0^1 &\triangleq \lambda l, h.\ l\\
+    r_0^2 &\triangleq \lambda l, h.\ h - l\\
+    r_1^1 &\triangleq \lambda l, h.\ l\\
+    r_1^2 &\triangleq \lambda l, h.\ l\\
+    r_1^3 &\triangleq \lambda l, h.\ h - l\\
+    r_1^4 &\triangleq \lambda l, h.\ h - l
+\end{align*}
+	  \caption{Termination argument.}
+	  \label{fig:argument}
+  \end{subfigure}
+  \caption{A patch for an infinite loop from libvncserver, and the corresponding termination argument.}
+	\label{fig:motivating}
+\end{figure*}
+
+
+\subsection{Termination Argument}
+
+Termination, being a liveness property, cannot be tested. To guarantee that the patched program terminates, we construct a termination argument that can be used to prove termination. To illustrate the output of our program repair system, consider a termination bug shown in \Cref{fig:buggy_program} from libvncserver~\cite{libvncserverBugURL} collected by Shi~\etal~\cite{shi2022lsa}, and simplified for the presentation purpose. The while loop in this program diverges if the value of \lstinline{l} is 0, since in that case the statement \lstinline{h -= l} has no effect on the value of \lstinline{h}, which controls the loop condition.
+
+To demonstrate how the termination argument proves that the patched program terminates, consider the program's update relation $R \triangleq C_1 \vee C_2$, where
+\begin{align*}
+    C_1 &\triangleq \mathrm{h} > 0 \land l > 0 \land l >  h  \land l^\prime = h \land h^\prime = h - l^\prime\\
+    C_2 &\triangleq h > 0 \land l > 0 \land l \le h  \land l^\prime = l \land h^\prime = h - l
+\end{align*}
+
+  This relation is defined via constraints on the initial (no-primed) value $h$, $l$ and the next (primed) values $h'$, $l'$ of program variables. Proving program termination then requires proving that the relation is well-founded, \ie does not permit infinite execution sequences. A common approach of doing that is finding a ranking function, but since constructing a ranking function for a complex relation can be challenging, we rely on the disjunctive well-foundedness principle~\cite{podelski2004Ti} that states that it is sufficient to check that the non-reflexive transitive closure of $R$ is included in the union of a finite set of some well-founded relations:
+\begin{equation}\label{eq:disjunctive}
+  R^+\subseteq \bigcup_{i=0}^n R_i,
+\end{equation}
+\noindent The advantage of this approach is that it decomposes the problem into subtasks, by requiring to synthesise ranking functions for simpler relations $R_i$. This is done at the expense of introducing an additional step of computing the non-reflexive transitive closure of $R$.
+
+\projName correctly repairs the buggy program by synthesising an identical patch to the developer patch shown in \Cref{fig:buggy_program}. Alongside the patch, it simultaneously synthesises a termination argument in the form of the set of functions in \Cref{fig:argument}. These functions can be used to prove that the patched program terminates as follows.
+
+A \emph{ranking function} $r$ is a mapping with a range to a total order where every nonempty subset has a least element. $\mathcal{M}_{r,b} \triangleq r(l,h) >= 0 \land r(l,h) - 1 >= r(l',h')$ is the \emph{ranking relation}. It is easy to show that $C_1 \subseteq \mathcal{M}_{r_0^1,0}$ and $C_2 \subseteq \mathcal{M}_{r_0^2,0}$, or, in the other words, $r_0^1$ is a ranking function of the relation $C_1$, and $r_0^2$ is a ranking function of the relation $C_2$. This implies that $C_1$ and $C_2$ are well-founded~\cite{cook2009priciples}. Therefore, if the loop executes the same branch of the if statement at each iterations, it is guaranteed to terminate.
+
+We now need to demonstrate that an execution of the loop involving both branches terminates. For that, consider $A_0 \triangleq C_0^1 \vee C_0^2$, where $C_0^1 \triangleq \mathcal{M}_{r_0^1,0}$ and $C_0^2 \triangleq \mathcal{M}_{r_0^1,0}$. By the definition of $C_0^1$ and $C_0^2$, $A_0$ is an overapproximation of $R$.
+
+To represent the values of program variables after one more iteration of the loop, we consider the relational compositions $C_0^1; C_1$, $C_0^2; C_1$, $C_0^1; C_2$ and $C_0^2; C_2$ that capture all possible transitions after executing one of the branches of the if statement. It is easy to show that $C_0^1; C_1 \subset \mathcal{M}_{r_1^1,0}$, $C_0^2; C_1 \subset \mathcal{M}_{r_1^2,0}$, $C_0^1; C_2 \subset \mathcal{M}_{r_1^3,0}$ and $C_0^2; C_2 \subset \mathcal{M}_{r_1^4,0}$.
+
+Finally, consider $A_1 \triangleq C_1^1 \vee C_1^2 \vee C_1^3 \vee C_1^4$, where $C_1^1 \triangleq \mathcal{M}_{r_1^1,0}$, $C_1^2 \triangleq \mathcal{M}_{r_1^2,0}$, $C_1^3 \triangleq \mathcal{M}_{r_1^4,0}$, and $C_1^4 \triangleq \mathcal{M}_{r_1^2,0}$. $A_1$ overapproximates $R$ since it overapproximates $A_0$ and $A_0$ overapproximates $R$. Moreover, $A_1 = A_0$ since $\mathcal{M}_{r_0^1,0} = \mathcal{M}_{r_1^1,0} = \mathcal{M}_{r_1^2,0}$ and $\mathcal{M}_{r_0^2,0} = \mathcal{M}_{r_1^3,0} = \mathcal{M}_{r_1^4,0}$. We showed that $A_1$ overapproximates $R;A_0$ and consequently it overapproximates $R;A_1$, which means, by induction, that $A_1$ overapproximates $R^+$.
+
+From the facts that $A_1$ overapproximates $R^+$ and that $A_1$ is a disjunction of well-founded relations since $C_1^1$, $C_1^2$, $C_1^3$, and $C_1^4$ are ranking relations, by applying \Cref{eq:disjunctive}, we can conclude that the patched program terminates.
+
+
+

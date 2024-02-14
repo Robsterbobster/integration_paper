@@ -1,0 +1,16 @@
+Does the vendor code make safety assumption of client code?
+
+Can our approach accurately make the implicit assumptions explicit?
+
+Can our approach avoid unsafe usage of vendor code?
+
+Experiment plans:
+Test our approach on library usage
+
+Test our approach on LLM-generated vendor code
+
+Implementation TODOs:
+1. Implement the instantiation from higher-order sanitiser to C code (by 27th Feb)
+2. Automate the entire tool (minor)
+3. For the test of libraries, modify infer to store some external calls in infer database (along with 4)
+4. Testing for both usage, library usage takes longer as we need to build the client for infer (ideally by 5th, at least one library tested, or LLM tested) (by 15th)

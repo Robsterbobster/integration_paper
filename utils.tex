@@ -1,0 +1,29 @@
+% TODOs
+\newboolean{showcomments}
+\setboolean{showcomments}{true} % comment this line to deactivate comments
+\ifthenelse{\boolean{showcomments}}{
+  \newcommand{\nbc}[3]{
+    {\textcolor{#3}{\small{\bfseries{#1:\ }}\textit{#2}}}}
+}{
+  \newcommand{\nbc}[3]{}
+}
+
+\newcommand{\sergey}[1]{\nbc{@Sergey}{#1}{red}\xspace}
+\newcommand{\peter}[1]{\nbc{@Peter}{#1}{blue}\xspace}
+\definecolor{todogreen}{rgb}{0.15, 0.65, 0.25}
+\newcommand{\robbie}[1]{\nbc{@Robbie}{#1}{green}\xspace}
+\definecolor{todored}{rgb}{0.72, 0.13, 0.13}
+\newcommand{\boyu}[1]{\nbc{@Boyu}{#1}{orange}\xspace}
+
+% English
+\newcommand{\adhoc}{\hbox{\emph{ad hoc}}\xspace}
+\newcommand{\cf}{\hbox{\emph{cf.}}\xspace} % confer which means compare
+\newcommand{\deletia}{\ldots [deletia] \ldots}
+\newcommand{\etal}{\hbox{\emph{et al.}}\xspace}
+\newcommand{\eg}{\hbox{\emph{e.g.}}\xspace}
+\newcommand{\ie}{\hbox{\emph{i.e.}}\xspace}
+\newcommand{\scil}{\hbox{\emph{sc.}}\xspace} %scilicet: it is permitted to know
+%\newcommand{\st}{\hbox{\emph{s.t.}}\xspace} % Clashes with an existing definition
+\newcommand{\wrt}{\hbox{\emph{w.r.t.}}\xspace}
+\newcommand{\etc}{\hbox{\emph{etc.}}\xspace}
+\newcommand{\viz}{\hbox{\emph{viz.}}\xspace} %videlicet: it is permitted to see
