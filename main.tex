@@ -36,6 +36,7 @@
 \usepackage{pifont}
 \usepackage{stmaryrd} % llbracket and rrbracket
 \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{minted}
 
 \newtheorem{definition}{Definition}
 \newtheorem{proposition}{Proposition}
@@ -100,21 +101,23 @@ The advancements of large language models (LLM) is reshaping the development lan
 %
 Developers write a prompt in natural languages describing the desired functionality and the AI assistant generates the requested code which is then integrated into existing code bases. 
 %
-Since these prompts generally only describe the functionality of the desired code, the LLM has little information about the context where the code is going to be integrated in. 
+Since these prompts generally only describe the functionality of the desired code, the LLM has little information about the non-functional requirements of the code base it is going to be integrated in. 
 %
-Because of this, the auto-generated code contains implicit non-functional assumptions about its later use, which may not align with those the developer made, e.g. whether a pointer parameter can be NULL or not. 
+In other words, the auto-generated code contains implicit non-functional assumptions about its later use which may not align with those the developer made, e.g. whether a pointer parameter can be NULL or not. 
 %
 Obviously, such misalignment in assumptions could lead to issues in the existing code base when the auto-generated code gets integrated in.
 %
 In case of misalignment, a natural question to ask then is what needs to be repaired? The existing code base or the auto-generated code?
 %
-In this work we show the role Incorrectness Logic could have in automatically extracting these implicit non-functional assumptions in the auto-generated code and render them explicit to facilitate a safer code integration.
+Stated differently, we are seeking to assign the blame for possible faults and  to devise possible repair strategies. 
+%
+We show the role Incorrectness Logic could have in automatically extracting these implicit non-functional assumptions in the auto-generated code and render them explicit to facilitate a safer code integration.
 %
 In particular, we are looking at the problem of code comprehension not from the traditional functionality angle, but from that of safety properties. 
 %
-We propose a safe integration framework which uses static analysis (1) to detect possible memory safety issues in the auto-generated code, (2) to describe these possible issues logically, and then (3) to generate sanitisers which ensure that the safety requirements in the existing code align with the safe usage of the auto-generated code.
+We propose a safe integration framework which uses static analysis (1) to detect possible memory safety issues in the auto-generated code, (2) to describe these possible issues logically, and then (3) to identify which program unit is responsible for fixing the issues in order to generate sanitisers which ensure that the safety requirements in the existing code align with the safe usage of the auto-generated code.
 % 
-As a use case showing the utility of such a workflow, we instantiate this framework to ensuring that the integration of auto-generated code with existing code bases does not lead to any Null Pointer Dereference. 
+%As a use case showing the utility of such a workflow, we instantiate this framework to ensuring that the integration of auto-generated code with existing code bases does not lead to any Null Pointer Dereference. 
 \end{abstract}
 
 

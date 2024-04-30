@@ -1,16 +1,25 @@
-Does the vendor code make safety assumption of client code?
 
-Can our approach accurately make the implicit assumptions explicit?
+\noindent{\bf RQ1} Does the vendor code make implicit safety assumption about the client code?
 
-Can our approach avoid unsafe usage of vendor code?
+\noindent{\bf RQ2} Can our approach accurately make the implicit assumptions explicit?
+
+\noindent{\bf RQ3} Can our approach avoid unsafe usage of vendor code?
 
 Experiment plans:
-Test our approach on library usage
+\begin{itemize}
+\item Test our approach on library usage
 
-Test our approach on LLM-generated vendor code
-
+\item Test our approach on LLM-generated vendor code
+\end{itemize}
 Implementation TODOs:
-1. Implement the instantiation from higher-order sanitiser to C code (by 27th Feb)
-2. Automate the entire tool (minor)
-3. For the test of libraries, modify infer to store some external calls in infer database (along with 4)
-4. Testing for both usage, library usage takes longer as we need to build the client for infer (ideally by 5th, at least one library tested, or LLM tested) (by 15th)
+
+\begin{enumerate}
+\item  Implement the instantiation from higher-order sanitiser to C code (by 27th Feb)
+
+\item  Automate the entire tool (minor)
+
+\item  For the test of libraries, modify infer to store some external calls in infer database (along with 4)
+
+\item  Testing for both usage, library usage takes longer as we need to build the client for infer (ideally by 5th, at least one library tested, or LLM tested) (by 15th)
+
+\end{enumerate}

@@ -1,6 +1,155 @@
-State of programming these days.(copilot)
+\begin{itemize}
+\item State of programming these days (copilot)
+%prompt engineering can work, but that's not the point - the point is to have a method that can be used in multiple contexts, both when a ptr is NULL and non-NULL. 
 
-Motivating example (copilot)
+Assume I'm developing a system (the Raft consensus algorithm in the current example) and I ask my AI assistant to implement a method 
+tat does [...]
+
+\item Motivating example (copilot)
+
+We first assume to be a novice C developer writing a program which manipulates some simple data structures. 
+
+\begin{figure}[t]
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Create two nodes with values 10 and 20
+struct Node* node1 = create_node(10);
+struct Node* node2 = create_node(20);
+…
+// Calculate the sum of values in the two nodes
+int sum = sum_two_nodes(node1, node2);
+...
+\end{minted}
+\captionof{figure}{Calling context - A}
+\label{fig:exnull-manifest}
+  \end{subfigure}
+}
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Create two nodes with value 10 
+struct Node* node1 = create_node(10);
+
+…
+// Calculate the sum of values in the two nodes
+int sum = sum_two_nodes(node1, node2);
+...
+\end{minted}
+\captionof{figure}{Calling context - B}
+\label{fig:exnull-manifest}
+  \end{subfigure}
+}
+\\~\\~\\
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
 
 
+// Write a function which sums up the values
+// stored in the memory locations pointed 
+// by the two parameters of the fucntion
+\end{minted}
+\captionof{figure}{Prompt example }
+\label{fig:exmem-leak}
+  \end{subfigure}
+}
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Calculates the sum of values in two nodes
+int sum_two_nodes(struct Node* node1, 
+                           struct Node* node2) {
+    return node1->value + node2->value; }
+\end{minted}
+%\caption{The call on line 91 might return NULL, while \code{memset} dereferences \code{param}.}
+\captionof{figure}{Auto-generated code}
+\label{fig:exmem-leak}
+  \end{subfigure}
+}
+\caption{Pair-programming with AI assistance in a safe (A )and an unsafe context (B)}
+\end{figure}
+
+We next assume to be a C developer working on an implementation of the Raft consensus protocol. 
+
+\begin{figure}[t]
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Create two nodes with values 10 and 20
+struct Node* node1 = create_node(10);
+struct Node* node2 = create_node(20);
+…
+// Calculate the sum of values in the two nodes
+int sum = sum_two_nodes(node1, node2);
+...
+\end{minted}
+\captionof{figure}{Calling context - A}
+\label{fig:exnull-manifest}
+  \end{subfigure}
+}
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Create two nodes with value 10 
+struct Node* node1 = create_node(10);
+
+…
+// Calculate the sum of values in the two nodes
+int sum = sum_two_nodes(node1, node2);
+...
+\end{minted}
+\captionof{figure}{Calling context - B}
+\label{fig:exnull-manifest}
+  \end{subfigure}
+}
+\\~\\~\\
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+
+
+// Write a function which sums up the values
+// stored in the memory locations pointed 
+// by the two parameters of the fucntion
+\end{minted}
+\captionof{figure}{Prompt example }
+\label{fig:exmem-leak}
+  \end{subfigure}
+}
+{\footnotesize
+\begin{subfigure}{0.49\textwidth}
+\begin{minted}[escapeinside=@@,fontsize=\footnotesize,autogobble,escapeinside={(*@}{@*)}]{C}
+// Calculates the sum of values in two nodes
+int sum_two_nodes(struct Node* node1, 
+                           struct Node* node2) {
+    return node1->value + node2->value; }
+\end{minted}
+%\caption{The call on line 91 might return NULL, while \code{memset} dereferences \code{param}.}
+\captionof{figure}{Auto-generated code}
+\label{fig:exmem-leak}
+  \end{subfigure}
+}
+\caption{Pair-programming with AI assistance leads to unsafety in an implementation of Raft}
+\end{figure}
+\end{itemize}
+
+
+
+When bugs appear after the integration of auto-generated code into existing projects, it is often difficult to say whether they appear because the auto-generated code is incorrect, or because there is a misalignment between the non-functional requirements of the existing code and the assumptions the auto-generated code was built upon. 
+For the former case, there is a whole research area meant to show the correctness of auto-generated code. 
+For the latter case, there is little to no work done understanding how to assign repair obligations, i.e. \emph{blame}, in order to remedy this misalignment. 
+
+To address this problem, we design a logical framework that helps to assign repair responsibility for the said misalignment, while assisting an oracle with the sanitisation of the fault as well. Sanitisation effectively avoids erroneous non-functional property executions without modifying the auto-generated code even after its integration into the existing codebase.
+
+This framework consists of mainly two types of abstraction, vendor abstractions that specify the blame on vendor code when the target bug occurs, and client abstractions that denote the blame on client code when the target bug occurs.
+
+Besides vendor and client abstractions, we also introduce two worlds, client world and vendor world. Based on which world the analysis is at and whether there is a memory allocation (malloc), a memory free (free), or an assignment to the pointer variable (including dereference), the framework introduces/preserves predicates or removes predicates. In addition, we introduce a higher-order predicate named blame, which can either be instantiated to a client predicate or a vendor predicate based on the world of the caller function.
+
+For research questions, the first one is whether LLM is making implicit assumptions on non-functional properties. The second one would be how effective is our approach compared to simply integrating the autogenerated code into existing code without any sanitiser etc. 
+\begin{itemize}
+    \item How common is for the assumptions of the vendor code to be misaligned with the requirements of the client's code?
+    \item How effective is the blame shifting framework at aligning the client with the vendor code, e.g. disabling erroneous paths?
+    \item How ``natural'' are the sanitisations our framework derived?  
+\end{itemize}
 
